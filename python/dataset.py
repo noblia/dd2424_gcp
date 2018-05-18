@@ -4,6 +4,7 @@ from skimage.color import rgb2gray
 import matplotlib.pyplot as plt
 from math import isnan
 from os.path import join
+from random import randint, random
 from sys import argv, exit
 
 from Image import Image
@@ -110,7 +111,7 @@ def main():
         '/home/n/o/noblia/PycharmProjects/dd2424_project/crchistophenotypes_2016_04_28/CRCHistoPhenotypes_2016_04_28/Classification/',
         no_imgs=no_imgs, sub_img_size=27)
 
-def cells_in_image(base_dir, idx):
+def cells_in_image(base_dir, idx, freqs):
     base_path = join(base_dir, 'img%d/img%d' % (idx, idx))
     image_path = base_path + '.bmp'
 
@@ -118,12 +119,14 @@ def cells_in_image(base_dir, idx):
     img = rgb2gray(img)
     img = img.reshape(500, 500)
 
-
-
+    dupes = [round(0.5*1/f) for f in freqs]
     classes = ['epithelial', 'fibroblast', 'inflammatory', 'others']
     for cls_idx, cls in enumerate(classes):
         cls_path = base_path + '_' + cls + '.mat'
         mat = sio.loadmat(cls_path)['detection'].reshape(-1, 2)
+
+        freq = freqs[cls_idx]
+        
         for [px, py] in mat:
             s_x = int(round(py - 27.0/2))
             e_x = s_x + 27
@@ -134,11 +137,25 @@ def cells_in_image(base_dir, idx):
             if sel.shape != (27, 27):
                 # Skip edge cells
                 continue
-            yield sel.reshape(-1), cls_idx
 
-def cells_in_dataset(base_dir):
+            for x in range(dupes[cls_idx]):
+                if x == 0:
+                    sel2 = sel
+                elif x == 1:
+                    sel2 = np.fliplr(sel)
+                elif x == 3:
+                    sel2 = np.fliplr(sel)
+                elif x == 4:
+                    sel2 = np.rot90(sel, k = 1)
+                elif x == 5:
+                    sel2 = np.rot90(sel, k = 2)
+                elif x == 6:
+                    sel2 = np.rot90(sel, k = 3)
+                yield sel2.reshape(-1), cls_idx
+
+def cells_in_dataset(base_dir, freqs):
     for x in range(1, 101):
-        for (x, y) in cells_in_image(argv[1], x):
+        for (x, y) in cells_in_image(argv[1], x, freqs):
             yield (x, y)
 
 if __name__ == "__main__":
