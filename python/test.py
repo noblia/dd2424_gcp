@@ -1,5 +1,5 @@
 from dataset import cells_in_dataset
-from Network import Network
+# from Network import Network
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join
@@ -11,11 +11,13 @@ if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
 # [0.35, 0.25, 0.31, 0.09]
-xy_pairs = list(cells_in_dataset(argv[1], [0.35, 0.25, 0.31, 0.10]))
+xy_pairs = list(cells_in_dataset(argv[1], [0.35/0.35, 0.25/0.35, 0.31/0.35, 0.09/0.35]))
+
 shuffle(xy_pairs)
 
 # Transpose
 cells = list(zip(*xy_pairs))
+# print(cells[1].count(0), cells[1].count(1), cells[1].count(2), cells[1].count(3))
 
 
 x = np.float32(cells[0])
