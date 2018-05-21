@@ -2,8 +2,9 @@ import tensorflow as tf
 
 
 class Network:
-    def __init__(self, eta=0.01, n_epochs=120, n_batch=500):
+    def __init__(self, eta=0.01, n_epochs=120, n_batch=500, lamb=5e-4):
         self.eta = eta
+        self.lamb = lamb
         self.n_epochs = n_epochs
         self.n_batch = n_batch
         self.boundaries = [60, 100]
@@ -37,6 +38,8 @@ class Network:
 
         # Calculate Loss (for both TRAIN and EVAL modes)
         loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+        l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables()])
+        loss += self.lamb * l2_loss
 
         # Configure the Training Op (for TRAIN mode)
         if mode == tf.estimator.ModeKeys.TRAIN:

@@ -1,30 +1,39 @@
 from dataset import cells_in_dataset
-# from Network import Network
+from itertools import groupby
+from Network import Network
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join
-from random import shuffle
+from random import choice, shuffle
 from skimage import color
 from sys import argv, exit
+
+def uniform_class_sampling(yx, n):
+    gb = groupby(sorted(yx, key = lambda el: el[0]),
+                 key = lambda el: el[0])
+    gb = [(k, list(v)) for (k, v) in gb]
+    print(len(gb[0][1]))
+    for k, lst in gb:
+        for x in range(n):
+            yield (k, choice(lst)[1])
+
 
 if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
-# [0.35, 0.25, 0.31, 0.09]
-xy_pairs = list(cells_in_dataset(argv[1], [0.35/0.35, 0.25/0.35, 0.31/0.35, 0.09/0.35]))
 
-shuffle(xy_pairs)
+yx = list(cells_in_dataset(argv[1], [0.35/0.35, 0.25/0.35, 0.31/0.35, 0.09/0.35]))
+yx = list(uniform_class_sampling(yx, 5000))
+shuffle(yx)
 
 # Transpose
-cells = list(zip(*xy_pairs))
-# print(cells[1].count(0), cells[1].count(1), cells[1].count(2), cells[1].count(3))
+cells = list(zip(*yx))
 
-
-x = np.float32(cells[0])
-y = np.array(cells[1])
+x = np.float32(cells[1])
+y = np.array(cells[0])
 
 # 80% train, 20% test
-split = int(len(xy_pairs)*0.8)
+split = int(len(yx)*0.8)
 x_train, x_test = x[:split], x[split:]
 y_train, y_test = y[:split], y[split:]
 

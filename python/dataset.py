@@ -175,43 +175,29 @@ def cells_in_image(base_dir, idx, freqs):
    # dupes = [round(0.5 * 1 / f) for f in freqs]
     classes = ['epithelial', 'fibroblast', 'inflammatory', 'others']
     for cls_idx, cls in enumerate(classes):
-        #i = 0
-
         cls_path = base_path + '_' + cls + '.mat'
         mat = sio.loadmat(cls_path)['detection'].reshape(-1, 2)
 
         freq = freqs[cls_idx]
 
         for [px, py] in mat:
-            #offset center of image from cell
-            if random() > freq:
-                r = randint(-5, 5)
-                sel = subImage(img, px, py, r)
-                yield sel.reshape(-1), cls_idx
-            else:
-                sel = subImage(img, px, py, r=0)
+            sel = subImage(img, px, py, 0)
             if sel.shape != (27, 27, 3):
                 # Skip edge cells
                 continue
-          #  for x in range(dupes[cls_idx]):
-          #   if i == 0:
-          #       plt.imshow(sel)
-          #       plt.savefig(classes[cls_idx] + '.png')
-          #       i += 1
             sel2 = flip(sel)
             sel2 = rotate(sel)
             # all cells are perturbed in hsv space!!!
             sel2 = perturbe_color(sel)
             sel2 = rgb2gray(sel2)
             sel2 = sel2.reshape(27, 27)
-            yield sel2.reshape(-1), cls_idx
+            yield cls_idx, sel2.reshape(-1)
 
 
 def cells_in_dataset(base_dir, freqs):
     for x in range(1, 101):
-        for (x, y) in cells_in_image(argv[1], x, freqs):
-            yield (x, y)
-
+        for tup in cells_in_image(argv[1], x, freqs):
+            yield tup
 
 
 if __name__ == "__main__":
