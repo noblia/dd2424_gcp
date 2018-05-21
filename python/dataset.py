@@ -115,16 +115,16 @@ def main():
 
 
 def perturbe_color(sel, h_limits=(0.95, 1.05), sv_limits=(0.9, 1.1)):
-    sel2 = rgb2hsv(sel)
+    sel = rgb2hsv(sel)
     r = [
-        np.random.uniform(low=h_limits[0], high=h_limits[1]),
-        np.random.uniform(low=sv_limits[0], high=sv_limits[1]),
-        np.random.uniform(low=sv_limits[0], high=sv_limits[1])]
+        np.random.uniform(low = 0.95, high = 1.05),
+        np.random.uniform(low = 0.9, high = 1.1),
+        np.random.uniform(low = 0.9, high = 1.1)]
     i = 0
     for n in r:
-        sel2[:, :, i] = sel2[:, :, i] * n
+        sel[:, :, i] = sel[:, :, i] * n
         i += 1
-    return hsv2rgb(sel2)
+    return hsv2rgb(sel)
 
 
 def flip(sel):
@@ -162,41 +162,30 @@ def subImage(img, py, px, r):
     return img[s_x:e_x, s_y:e_y, :]
 
 
-def cells_in_image(base_dir, idx, freqs):
+def cells_in_image(base_dir, idx):
     base_path = join(base_dir, 'img%d/img%d' % (idx, idx))
     image_path = base_path + '.bmp'
 
     img = plt.imread(image_path)
-
-    img.setflags(write=1)
-    # img = rgb2gray(img)
-    # img = img.reshape(500, 500)
-
-   # dupes = [round(0.5 * 1 / f) for f in freqs]
     classes = ['epithelial', 'fibroblast', 'inflammatory', 'others']
     for cls_idx, cls in enumerate(classes):
         cls_path = base_path + '_' + cls + '.mat'
         mat = sio.loadmat(cls_path)['detection'].reshape(-1, 2)
-
-        freq = freqs[cls_idx]
-
         for [px, py] in mat:
             sel = subImage(img, px, py, 0)
             if sel.shape != (27, 27, 3):
-                # Skip edge cells
                 continue
-            sel2 = flip(sel)
-            sel2 = rotate(sel)
+            sel = flip(sel)
+            sel = rotate(sel)
             # all cells are perturbed in hsv space!!!
-            sel2 = perturbe_color(sel)
-            sel2 = rgb2gray(sel2)
-            sel2 = sel2.reshape(27, 27)
-            yield cls_idx, sel2.reshape(-1)
+            sel = perturbe_color(sel)
+            sel = rgb2gray(sel)
+            sel = sel.reshape(27, 27)
+            yield cls_idx, sel.reshape(-1)
 
-
-def cells_in_dataset(base_dir, freqs):
+def cells_in_dataset(base_dir):
     for x in range(1, 101):
-        for tup in cells_in_image(argv[1], x, freqs):
+        for tup in cells_in_image(argv[1], x):
             yield tup
 
 
