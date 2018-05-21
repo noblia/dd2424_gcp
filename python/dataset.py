@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.io as sio
-from skimage.color import rgb2gray
+from skimage.color import rgb2gray, rgb2hsv, hsv2rgb
 import matplotlib.pyplot as plt
 from math import isnan
 from os.path import join
@@ -111,17 +111,53 @@ def main():
         '/home/n/o/noblia/PycharmProjects/dd2424_project/crchistophenotypes_2016_04_28/CRCHistoPhenotypes_2016_04_28/Classification/',
         no_imgs=no_imgs, sub_img_size=27)
 
+
+def perturbe_color(sel, h_limits=(0.95, 1.05), sv_limits=(0.9, 1.1)):
+        sel2 = rgb2hsv(sel)
+        r = [
+            np.random.uniform(low=h_limits[0], high=h_limits[1]),
+            np.random.uniform(low=sv_limits[0], high=sv_limits[1]),
+            np.random.uniform(low=sv_limits[0], high=sv_limits[1])]
+        i = 0
+        for n in r:
+            sel2[:, :, i] = sel2[:, :, i] * n
+            i += 1
+        return hsv2rgb(sel2)
+
+def perturbe(sel):
+    r = randint(0,7)
+    sel2 = sel
+    if r == 0:
+        sel2 = np.fliplr(sel)
+    elif r == 1:
+        sel2 = np.flipud(sel)
+    elif r == 2:
+        sel2 = np.rot90(sel, k=1)
+    elif r == 3:
+        sel2 = np.rot90(sel, k=2)
+    elif r == 4:
+        sel2 = np.rot90(sel, k=3)
+    elif r == 5:
+        sel2 = perturbe_color(sel)
+    elif r == 6:
+        sel2 = sel
+    return sel2
+
+
 def cells_in_image(base_dir, idx, freqs):
     base_path = join(base_dir, 'img%d/img%d' % (idx, idx))
     image_path = base_path + '.bmp'
 
     img = plt.imread(image_path)
-    img = rgb2gray(img)
-    img = img.reshape(500, 500)
+
+    img.setflags(write=1)
+    # img = rgb2gray(img)
+    # img = img.reshape(500, 500)
 
     dupes = [round(0.5*1/f) for f in freqs]
     classes = ['epithelial', 'fibroblast', 'inflammatory', 'others']
     for cls_idx, cls in enumerate(classes):
+        i = 0
         cls_path = base_path + '_' + cls + '.mat'
         mat = sio.loadmat(cls_path)['detection'].reshape(-1, 2)
 
@@ -132,25 +168,21 @@ def cells_in_image(base_dir, idx, freqs):
             e_x = s_x + 27
             s_y = int(round(px - 27.0/2))
             e_y = s_y + 27
-
-            sel = img[s_x:e_x, s_y:e_y]
-            if sel.shape != (27, 27):
+            sel = img[s_x:e_x, s_y:e_y, :]
+            # plt.imshow(sel)
+            # plt.show()
+            if sel.shape != (27, 27, 3):
                 # Skip edge cells
                 continue
-
             for x in range(dupes[cls_idx]):
-                if x == 0:
-                    sel2 = sel
-                elif x == 1:
-                    sel2 = np.fliplr(sel)
-                elif x == 3:
-                    sel2 = np.fliplr(sel)
-                elif x == 4:
-                    sel2 = np.rot90(sel, k = 1)
-                elif x == 5:
-                    sel2 = np.rot90(sel, k = 2)
-                elif x == 6:
-                    sel2 = np.rot90(sel, k = 3)
+                if i == 0:
+                    plt.imshow(sel)
+                    plt.savefig(classes[cls_idx] + '.png')
+                    i += 1
+
+                sel2 = perturbe(sel)
+                sel2 = rgb2gray(sel2)
+                sel2 = sel2.reshape(27, 27)
                 yield sel2.reshape(-1), cls_idx
 
 def cells_in_dataset(base_dir, freqs):
