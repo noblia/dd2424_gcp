@@ -154,10 +154,10 @@ def rotate(sel):
         sel2 = sel
     return sel2
 
-def subImage(img, py, px, r):
-    s_x = int(round(py + r - 27.0 / 2))
+def subImage(img, px, py):
+    s_x = int(round(px - 27.0 / 2))
     e_x = s_x + 27
-    s_y = int(round(px + r - 27.0 / 2))
+    s_y = int(round(py - 27.0 / 2))
     e_y = s_y + 27
     return img[s_x:e_x, s_y:e_y, :]
 
@@ -172,7 +172,7 @@ def cells_in_image(base_dir, idx):
         cls_path = base_path + '_' + cls + '.mat'
         mat = sio.loadmat(cls_path)['detection'].reshape(-1, 2)
         for [px, py] in mat:
-            sel = subImage(img, px, py, 0)
+            sel = subImage(img, px, py)
             if sel.shape != (27, 27, 3):
                 continue
             sel = flip(sel)
