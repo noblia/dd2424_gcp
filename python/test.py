@@ -10,12 +10,13 @@ from sys import argv, exit
 if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
-
-xy_pairs = list(cells_in_dataset(argv[1], [0.35, 0.25, 0.31, 0.09]))
+# [0.35, 0.25, 0.31, 0.09]
+xy_pairs = list(cells_in_dataset(argv[1], [0.35, 0.25, 0.31, 0.10]))
 shuffle(xy_pairs)
 
 # Transpose
 cells = list(zip(*xy_pairs))
+
 
 x = np.float32(cells[0])
 y = np.array(cells[1])
