@@ -106,14 +106,6 @@ class Dataset:
         plt.imshow(img.astype(int))
         plt.show()
 
-
-def main():
-    no_imgs = 100
-    d = Dataset(
-        '/home/n/o/noblia/PycharmProjects/dd2424_project/crchistophenotypes_2016_04_28/CRCHistoPhenotypes_2016_04_28/Classification/',
-        no_imgs=no_imgs, sub_img_size=27)
-
-
 def perturbe_color(sel):
     sel = rgb2hsv(sel)
     r = [
@@ -160,12 +152,14 @@ def cells_in_image(base_dir, idx):
             sel = subImage(img, px, py)
             if sel.shape != (27, 27, 3):
                 continue
+
             sel = flip(sel)
             sel = rotate(sel)
             # all cells are perturbed in hsv space!!!
             sel = perturbe_color(sel)
             sel = rgb2gray(sel)
             sel = sel.reshape(27, 27)
+
             yield cls_idx, sel.reshape(-1)
 
 def cells_in_dataset(base_dir):

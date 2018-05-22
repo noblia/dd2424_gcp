@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 class Network:
-    
+
     def __init__(self, eta=0.01, n_epochs=120, n_batch=500, lamb=5e-4):
         self.preds = 0
         self.eta = eta
@@ -13,7 +13,7 @@ class Network:
         self.cnn_classifier = self.init_estimator()
 
     def cnn_model_fn(self, features, labels, mode):
-        kernel_init = tf.contrib.layers.xavier_initializer(uniform=False) 
+        kernel_init = tf.contrib.layers.xavier_initializer(uniform=False)
         input_layer = tf.reshape(features["x"], [-1, 27, 27, 1])
 
         conv1 = tf.layers.conv2d(inputs = input_layer,
@@ -44,7 +44,7 @@ class Network:
         loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits,loss_collection=tf.GraphKeys.LOSSES )
         l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
         loss = tf.add(loss, self.lamb * l2_loss, name='cost')
-        
+
 
         # Configure the Training Op (for TRAIN mode)
         if mode == tf.estimator.ModeKeys.TRAIN:
@@ -62,10 +62,14 @@ class Network:
             'precision' : tf.metrics.precision(labels, predictions["classes"]),
             'recall' : tf.metrics.recall(labels, predictions["classes"])
         }
-        return tf.estimator.EstimatorSpec(predictions = predictions['classes'], mode = mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        return tf.estimator.EstimatorSpec(
+            predictions = predictions['classes'],
+            mode = mode,
+            loss = loss,
+            eval_metric_ops = eval_metric_ops
+        )
 
     def init_estimator(self):
-        # model_dir= '/home/matilda.noblia/dd2424_gcp/python/model'
         return tf.estimator.Estimator(model_fn=self.cnn_model_fn)
 
     def set_logging_hook(self):
@@ -74,10 +78,9 @@ class Network:
        # tensors_to_log = {'costas' :'cost'}
         tensors_to_log = {}
         return tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
-    
+
 
     def train_network(self, features, labels):
-      
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={"x": features},
             y=labels,
@@ -86,7 +89,8 @@ class Network:
             shuffle=True
         )
         logging_hook = self.set_logging_hook()
-        return self.cnn_classifier.train(input_fn = train_input_fn, hooks=[logging_hook])
+        return self.cnn_classifier.train(input_fn = train_input_fn,
+                                         hooks = [logging_hook])
 
     def pred_network(self, features, labels):
          pred_input_fn = tf.estimator.inputs.numpy_input_fn(
@@ -99,9 +103,9 @@ class Network:
 
     def eval_network(self, features, labels):
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x={"x": features},
-            y=labels,
-            num_epochs=1,
-            shuffle=False
+            x = {"x": features},
+            y = labels,
+            num_epochs = 1,
+            shuffle = False
         )
         return self.cnn_classifier.evaluate(input_fn=eval_input_fn)
