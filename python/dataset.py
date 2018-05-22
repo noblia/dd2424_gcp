@@ -114,16 +114,14 @@ def main():
         no_imgs=no_imgs, sub_img_size=27)
 
 
-def perturbe_color(sel, h_limits=(0.95, 1.05), sv_limits=(0.9, 1.1)):
+def perturbe_color(sel):
     sel = rgb2hsv(sel)
     r = [
         np.random.uniform(low = 0.95, high = 1.05),
         np.random.uniform(low = 0.9, high = 1.1),
         np.random.uniform(low = 0.9, high = 1.1)]
-    i = 0
-    for n in r:
-        sel[:, :, i] = sel[:, :, i] * n
-        i += 1
+    for i in range(3):
+        sel[:, :, i] = np.clip(sel[:, :, i] * r[i], 0, 1)
     return hsv2rgb(sel)
 
 
@@ -140,19 +138,8 @@ def flip(sel):
 
 
 def rotate(sel):
-    r = randint(0, 5)
-    sel2 = sel
-    if r == 0:
-        sel2 = np.rot90(sel, k=1)
-    elif r == 1:
-        sel2 = np.rot90(sel, k=2)
-    elif r == 2:
-        sel2 = np.rot90(sel, k=3)
-    elif r == 3:
-        sel2 = perturbe_color(sel)
-    elif r == 4:
-        sel2 = sel
-    return sel2
+    r = randint(0,4)
+    return np.rot90(sel, k=r)
 
 def subImage(img, px, py):
     s_x = int(round(px - 27.0 / 2))

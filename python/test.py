@@ -22,7 +22,7 @@ if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
 
-yx = list(cells_in_dataset(argv[1], [0.35/0.35, 0.25/0.35, 0.31/0.35, 0.09/0.35]))
+yx = list(cells_in_dataset(argv[1]))
 yx = list(uniform_class_sampling(yx, 5000))
 shuffle(yx)
 
@@ -44,5 +44,8 @@ val = net.eval_network(x_test, y_test)
 r = val['recall']
 p = val['precision']
 f1 = (2 * p * r) / (p + r)
+if [p,r] == 0:
+    f1 = 'undefined'
+
 print(val, f1)
 
