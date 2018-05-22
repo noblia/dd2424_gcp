@@ -124,7 +124,6 @@ def perturbe_color(sel):
         sel[:, :, i] = np.clip(sel[:, :, i] * r[i], 0, 1)
     return hsv2rgb(sel)
 
-
 def flip(sel):
     r = randint(0, 3)
     sel2 = sel
@@ -146,8 +145,7 @@ def subImage(img, px, py):
     e_x = s_x + 27
     s_y = int(round(py - 27.0 / 2))
     e_y = s_y + 27
-    return img[s_x:e_x, s_y:e_y, :]
-
+    return img[s_y:e_y, s_x:e_x, :]
 
 def cells_in_image(base_dir, idx):
     base_path = join(base_dir, 'img%d/img%d' % (idx, idx))
