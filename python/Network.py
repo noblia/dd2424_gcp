@@ -1,8 +1,8 @@
 import tensorflow as tf
 
-
 class Network:
-    def __init__(self, eta=0.01, n_epochs=120, n_batch=100, lamb=5e-4):
+    
+    def __init__(self, eta=0.01, n_epochs=120, n_batch=500, lamb=5e-4):
         self.preds = 0
         self.eta = eta
         self.lamb = lamb
@@ -19,32 +19,35 @@ class Network:
         conv1 = tf.layers.conv2d(inputs = input_layer,
                                  filters = 36,
                                  kernel_size = [4, 4],
+                                 kernel_initializer = kernel_init,
                                  activation = tf.nn.relu)
         pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
-        conv2 = tf.layers.conv2d(inputs=pool1, filters=48, kernel_size=[3, 3], activation=tf.nn.relu)
+        conv2 = tf.layers.conv2d(inputs=pool1, filters=48, kernel_size=[3, 3],kernel_initializer=kernel_init,  activation=tf.nn.relu)
         pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
         pool2_flat = tf.reshape(pool2, [-1, 5 * 5 * 48])
-        dense = tf.layers.dense(inputs=pool2_flat, units=512, activation=tf.nn.relu)
+        dense = tf.layers.dense(inputs=pool2_flat, units=512,kernel_initializer = kernel_init, activation=tf.nn.relu)
         dropout = tf.layers.dropout(inputs=dense, rate=0.2, training=mode == tf.estimator.ModeKeys.TRAIN)
-        dense2 = tf.layers.dense(inputs=dropout, units=512, activation=tf.nn.relu)
+        dense2 = tf.layers.dense(inputs=dropout, units=512,kernel_initializer = kernel_init, activation=tf.nn.relu)
         dropout2 = tf.layers.dropout(inputs=dense2, rate=0.2, training=mode == tf.estimator.ModeKeys.TRAIN)
-        logits = tf.layers.dense(inputs=dropout2, units=4)
+        logits = tf.layers.dense(inputs=dropout2,kernel_initializer = kernel_init, units=4)
 
         predictions = {
             "classes": tf.argmax(input = logits, axis = 1),
             "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
-        }
+            }
 
         if mode == tf.estimator.ModeKeys.PREDICT:
             return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
         # Calculate Loss (for both TRAIN and EVAL modes)
-        loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
+        loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits,loss_collection=tf.GraphKeys.LOSSES )
         l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
-        loss += self.lamb * l2_loss
+        loss = tf.add(loss, self.lamb * l2_loss, name='cost')
+        
 
         # Configure the Training Op (for TRAIN mode)
         if mode == tf.estimator.ModeKeys.TRAIN:
+            tf.losses.add_loss(loss, loss_collection=tf.GraphKeys.LOSSES)
             global_step = tf.Variable(0, trainable=False)
             learning_rate = tf.train.piecewise_constant(global_step, boundaries = self.boundaries, values=self.values)
             optimizer = tf.train.MomentumOptimizer(learning_rate=learning_rate, momentum=0.9)
@@ -58,22 +61,22 @@ class Network:
             'precision' : tf.metrics.precision(labels, predictions["classes"]),
             'recall' : tf.metrics.recall(labels, predictions["classes"])
         }
-        return tf.estimator.EstimatorSpec(mode = mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        return tf.estimator.EstimatorSpec(predictions = predictions['classes'], mode = mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
     def init_estimator(self):
-        return tf.estimator.Estimator(model_fn=self.cnn_model_fn, model_dir = '/home/matilda.noblia/dd2424_gcp/python/model')
+        # model_dir= '/home/matilda.noblia/dd2424_gcp/python/model'
+        return tf.estimator.Estimator(model_fn=self.cnn_model_fn)
 
     def set_logging_hook(self):
         tf.logging.set_verbosity(tf.logging.INFO)
-        tensors_to_log = {"probabilities": "softmax_tensor"}
+        #tensors_to_log = {"probabilities": "softmax_tensor", 'costas' :'cost'}
+       # tensors_to_log = {'costas' :'cost'}
+        tensors_to_log = {}
         return tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
-
-    #def set_save_hook(self):
-     #   tensors_to_log = {'probabilities': 'softmax_tensor'}
-      #  return tf.train.SummarySaverHook(save_steps=50, summary_op = tensors_to_log, output_dir='/home/matilda.noblia/dd2424_gcp/python/model')
-
+    
 
     def train_network(self, features, labels):
+      
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={"x": features},
             y=labels,
@@ -82,8 +85,7 @@ class Network:
             shuffle=True
         )
         logging_hook = self.set_logging_hook()
-       # save_hook = self.set_save_hook()
-        self.cnn_classifier.train(input_fn = train_input_fn, hooks=[logging_hook])
+        return self.cnn_classifier.train(input_fn = train_input_fn, hooks=[logging_hook])
 
     def eval_network(self, features, labels):
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(

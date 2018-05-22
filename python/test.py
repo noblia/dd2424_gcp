@@ -21,9 +21,9 @@ def uniform_class_sampling(yx, n):
 if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
-
+cls_samp = 5000
 yx = list(cells_in_dataset(argv[1]))
-yx = list(uniform_class_sampling(yx, 5000))
+yx = list(uniform_class_sampling(yx, cls_samp))
 shuffle(yx)
 
 # Transpose
@@ -40,12 +40,13 @@ y_train, y_test = y[:split], y[split:]
 net = Network(n_epochs=120)
 net.train_network(x_train, y_train)
 
+
 val = net.eval_network(x_test, y_test)
 r = val['recall']
 p = val['precision']
 f1 = (2 * p * r) / (p + r)
-if [p,r] == 0:
+if p+r == 0:
     f1 = 'undefined'
 
-print(val, f1)
+print(f1)
 
