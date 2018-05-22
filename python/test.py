@@ -71,16 +71,19 @@ y_guesses = [el['classes'] for el in val]
 mat = confusion_matrix(y_test, y_guesses).T
 
 f1_classes = f1_score(y_test, y_guesses, average = None)
-f1_averages=  f1_score(y_test, y_guesses, average = 'weighted')
+f1_averages = f1_score(y_test, y_guesses, average = 'weighted')
 
 # Plot normalized confusion matrix
 plt.figure()
+labels = ['epithelial', 'fibroblast', 'inflammatory', 'others']
 plot_confusion_matrix(mat,
-                      classes = [
-                          'epithelial',
-                          'fibroblast',
-                          'inflammatory',
-                          'others'
-                      ],
+                      classes = labels,
                       normalize = True)
+plt.show()
+
+classes = f1_classes + f1_averages
+plt.figure()
+plt.bar(np.arange(len(classes)), classes)
+tick_marks = np.arange(len(classes))
+plt.xticks(tick_marks, labels + ['average'], rotation=45)
 plt.show()
