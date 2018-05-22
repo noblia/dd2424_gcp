@@ -30,10 +30,11 @@ class Network:
         dense2 = tf.layers.dense(inputs=dropout, units=512,kernel_initializer = kernel_init, activation=tf.nn.relu)
         dropout2 = tf.layers.dropout(inputs=dense2, rate=0.2, training=mode == tf.estimator.ModeKeys.TRAIN)
         logits = tf.layers.dense(inputs=dropout2,kernel_initializer = kernel_init, units=4)
-
+        
+        probabilities =  tf.nn.softmax(logits, name="softmax_tensor")
         predictions = {
-            "classes": tf.argmax(input = logits, axis = 1),
-            "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+            "classes": tf.argmax(input = probabilities, axis = 1),
+            "probabilities": probabilities,
             }
 
         if mode == tf.estimator.ModeKeys.PREDICT:
@@ -86,6 +87,15 @@ class Network:
         )
         logging_hook = self.set_logging_hook()
         return self.cnn_classifier.train(input_fn = train_input_fn, hooks=[logging_hook])
+
+    def pred_network(self, features, labels):
+         pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={"x": features},
+            y=labels,
+            num_epochs=1,
+            shuffle=False
+        )
+         return self.cnn_classifier.predict(input_fn=pred_input_fn)
 
     def eval_network(self, features, labels):
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(
