@@ -30,7 +30,7 @@ class Network:
         dense2 = tf.layers.dense(inputs=dropout, units=512,kernel_initializer = kernel_init, activation=tf.nn.relu)
         dropout2 = tf.layers.dropout(inputs=dense2, rate=0.2, training=mode == tf.estimator.ModeKeys.TRAIN)
         logits = tf.layers.dense(inputs=dropout2,kernel_initializer = kernel_init, units=4)
-        
+
         probabilities =  tf.nn.softmax(logits, name="softmax_tensor")
         predictions = {
             "classes": tf.argmax(input = probabilities, axis = 1),
@@ -44,7 +44,6 @@ class Network:
         loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits,loss_collection=tf.GraphKeys.LOSSES )
         l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
         loss = tf.add(loss, self.lamb * l2_loss, name='cost')
-
 
         # Configure the Training Op (for TRAIN mode)
         if mode == tf.estimator.ModeKeys.TRAIN:
