@@ -9,6 +9,23 @@ from sklearn.metrics import confusion_matrix, f1_score
 from skimage import color
 from sys import argv, exit
 
+def run_network(n_batch):
+    x_train, x_test, y_train, y_test = get_data(argv[1], 5000)
+
+    net = Network(120, n_batch)
+    net.train_network(x_train, y_train)
+
+    val = net.pred_network(x_test, y_test)
+
+    #get predictions from network
+    y_guesses = [el['classes'] for el in val]
+
+    plot_f1_scores(y_test, y_guesses, n_batch)
+
+    mat = confusion_matrix(y_test, y_guesses).T
+    plot_confusion_matrix(mat, n_batch)
+
+
 '''Main file which gets data from a directory, runs it through the
 network, gets the predictions from the network based on test data then
 plots confusion matrix and bar chart of f1_scores
@@ -18,17 +35,6 @@ if len(argv) != 2:
     print('usage %s: datadir' % argv[0])
     exit(1)
 
-x_train, x_test, y_train, y_test = get_data(argv[1], 5000)
-
-net = Network(n_epochs = 120)
-net.train_network(x_train, y_train)
-
-val = net.pred_network(x_test, y_test)
-
-#get predictions from network
-y_guesses = [el['classes'] for el in val]
-
-plot_f1_scores(y_test, y_guesses)
-
-mat = confusion_matrix(y_test, y_guesses).T
-plot_confusion_matrix(mat)
+batches = [100, 250, 500, 1000]
+for b in batches:
+    run_network(b)

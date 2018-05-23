@@ -13,13 +13,12 @@ http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matr
 Input: confusion matrix, class labels, boolean to choose normalization
 or not, color scheme of plot Output: figure of plotted confusion
 '''
-def plot_confusion_matrix(cm, normalize = True, cmap = plt.cm.Blues):
+def plot_confusion_matrix(cm, n_batch, cmap = plt.cm.Blues):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
     plt.figure()
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -28,7 +27,7 @@ def plot_confusion_matrix(cm, normalize = True, cmap = plt.cm.Blues):
     plt.xticks(tick_marks, labels, rotation=45)
     plt.yticks(tick_marks, labels)
 
-    fmt = '.2f' if normalize else 'd'
+    fmt = '.2f'
     thresh = cm.max() / 2.
     for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, format(cm[i, j], fmt),
@@ -37,18 +36,32 @@ def plot_confusion_matrix(cm, normalize = True, cmap = plt.cm.Blues):
     plt.tight_layout()
     # plt.ylabel('True label')
     # plt.xlabel('Predicted label')
-    plt.savefig('/home/matilda.noblia/dd2424_gcp/python/figures/mat.png')
+    fname = 'mat-%04d.png' % n_batch
+    path = '/home/matilda.noblia/dd2424_gcp/python/figures/%s' % fname
+    plt.savefig(path)
 
-def plot_f1_scores(y_true, y_guesses):
+def plot_f1_scores(y_true, y_guesses, n_batch):
+
+    path_fmt = '/home/matilda.noblia/dd2424_gcp/python/figures/%s'
+
     scores = list(f1_score(y_true, y_guesses, average = None))
     avg = f1_score(y_true, y_guesses, average = 'weighted')
     scores.append(avg)
 
+    line = ' '.join(['%.2f' % s for s in scores])
+    fname = 'scores-%04d.txt' % n_batch
+    open(path_fmt % fname, 'wt').write(line + '\n')
+
     labels2 = labels + ['average']
     n_bars = len(scores)
+    x= np.arange(n_bars)
 
     plt.figure()
-    plt.bar(np.arange(n_bars), scores)
-    tick_marks = np.arange(n_bars)
+    plt.bar(x, scores)
+
+    tick_marks = x
     plt.xticks(tick_marks, labels2)
-    plt.savefig('/home/matilda.noblia/dd2424_gcp/python/figures/bar.png')
+    plt.yticks(np.arange(0, 1.1, 0.1))
+
+    fname = 'bar-%04d.png' % n_batch
+    plt.savefig(path_fmt % fname)

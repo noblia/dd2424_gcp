@@ -1,10 +1,14 @@
 import tensorflow as tf
 
-class Network:
+'''
+A lot of this code is based on the TensorFlow tutorial available at:
 
-    def __init__(self, eta=0.01, n_epochs=120, n_batch=500, lamb=5e-4):
+https://www.tensorflow.org/tutorials/layers
+'''
+
+class Network:
+    def __init__(self, n_epochs, n_batch, lamb=5e-4):
         self.preds = 0
-        self.eta = eta
         self.lamb = lamb
         self.n_epochs = n_epochs
         self.n_batch = n_batch
@@ -22,7 +26,11 @@ class Network:
                                  kernel_initializer = kernel_init,
                                  activation = tf.nn.relu)
         pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
-        conv2 = tf.layers.conv2d(inputs=pool1, filters=48, kernel_size=[3, 3],kernel_initializer=kernel_init,  activation=tf.nn.relu)
+        conv2 = tf.layers.conv2d(inputs=pool1,
+                                 filters=48,
+                                 kernel_size=[3, 3],
+                                 kernel_initializer=kernel_init,
+                                 activation=tf.nn.relu)
         pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
         pool2_flat = tf.reshape(pool2, [-1, 5 * 5 * 48])
         dense = tf.layers.dense(inputs=pool2_flat, units=512,kernel_initializer = kernel_init, activation=tf.nn.relu)
@@ -41,8 +49,11 @@ class Network:
             return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
         # Calculate Loss (for both TRAIN and EVAL modes)
-        loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits,loss_collection=tf.GraphKeys.LOSSES )
-        l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if 'bias' not in v.name])
+        loss = tf.losses.sparse_softmax_cross_entropy(labels=labels,
+                                                      logits=logits,
+                                                      loss_collection=tf.GraphKeys.LOSSES )
+        l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables()
+                            if 'bias' not in v.name])
         loss = tf.add(loss, self.lamb * l2_loss, name='cost')
 
         # Configure the Training Op (for TRAIN mode)
@@ -73,32 +84,30 @@ class Network:
 
     def set_logging_hook(self):
         tf.logging.set_verbosity(tf.logging.INFO)
-        #tensors_to_log = {"probabilities": "softmax_tensor", 'costas' :'cost'}
-       # tensors_to_log = {'costas' :'cost'}
         tensors_to_log = {}
-        return tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=50)
-
+        return tf.train.LoggingTensorHook(tensors = tensors_to_log,
+                                          every_n_iter = 50)
 
     def train_network(self, features, labels):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x={"x": features},
-            y=labels,
-            batch_size=self.n_batch,
-            num_epochs=self.n_epochs,
-            shuffle=True
+            x = {"x": features},
+            y = labels,
+            batch_size = self.n_batch,
+            num_epochs = self.n_epochs,
+            shuffle = True
         )
         logging_hook = self.set_logging_hook()
         return self.cnn_classifier.train(input_fn = train_input_fn,
                                          hooks = [logging_hook])
 
     def pred_network(self, features, labels):
-         pred_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x={"x": features},
-            y=labels,
-            num_epochs=1,
-            shuffle=False
+        pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x = {"x": features},
+            y = labels,
+            num_epochs = 1,
+            shuffle = False
         )
-         return self.cnn_classifier.predict(input_fn=pred_input_fn)
+        return self.cnn_classifier.predict(input_fn=pred_input_fn)
 
     def eval_network(self, features, labels):
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(
