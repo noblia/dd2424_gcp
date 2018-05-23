@@ -36,21 +36,23 @@ def plot_confusion_matrix(cm, n_batch, cmap = plt.cm.Blues):
     plt.tight_layout()
     # plt.ylabel('True label')
     # plt.xlabel('Predicted label')
-    fname = 'mat-%04d.png' % n_batch
-    path = '/home/matilda.noblia/dd2424_gcp/python/figures/%s' % fname
-    plt.savefig(path)
+    #fname = 'mat-%04d.png' % n_batch
+    plt.plot()
+    #path = '/home/matilda.noblia/dd2424_gcp/python/figures/%s' % fname
+    #plt.savefig(path)
+			
 
 def plot_f1_scores(y_true, y_guesses, n_batch):
 
-    path_fmt = '/home/matilda.noblia/dd2424_gcp/python/figures/%s'
+    #path_fmt = '/home/matilda.noblia/dd2424_gcp/python/figures/%s'
 
     scores = list(f1_score(y_true, y_guesses, average = None))
     avg = f1_score(y_true, y_guesses, average = 'weighted')
     scores.append(avg)
 
-    line = ' '.join(['%.2f' % s for s in scores])
-    fname = 'scores-%04d.txt' % n_batch
-    open(path_fmt % fname, 'wt').write(line + '\n')
+    #line = ' '.join(['%.2f' % s for s in scores])
+    #fname = 'scores-%04d.txt' % n_batch
+    #open(path_fmt % fname, 'wt').write(line + '\n')
 
     labels2 = labels + ['average']
     n_bars = len(scores)
@@ -63,5 +65,6 @@ def plot_f1_scores(y_true, y_guesses, n_batch):
     plt.xticks(tick_marks, labels2)
     plt.yticks(np.arange(0, 1.1, 0.1))
 
-    fname = 'bar-%04d.png' % n_batch
-    plt.savefig(path_fmt % fname)
+    #fname = 'bar-%04d.png' % n_batch
+    #plt.savefig(path_fmt % fname)
+    plt.plot()

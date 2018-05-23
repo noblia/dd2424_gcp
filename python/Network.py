@@ -16,6 +16,9 @@ class Network:
         self.values = [1e-2, 1e-3, 1e-4]
         self.cnn_classifier = self.init_estimator()
 
+''' Define network architecture, loss function, optimizer and evaluation metrics
+
+'''
     def cnn_model_fn(self, features, labels, mode):
         kernel_init = tf.contrib.layers.xavier_initializer(uniform=False)
         input_layer = tf.reshape(features["x"], [-1, 27, 27, 1])
@@ -79,15 +82,24 @@ class Network:
             eval_metric_ops = eval_metric_ops
         )
 
+''' Initialize the estimator based on the network defined above
+
+'''
     def init_estimator(self):
         return tf.estimator.Estimator(model_fn=self.cnn_model_fn)
 
+''' Set logging to keep track of learning
+
+'''
     def set_logging_hook(self):
         tf.logging.set_verbosity(tf.logging.INFO)
         tensors_to_log = {}
         return tf.train.LoggingTensorHook(tensors = tensors_to_log,
                                           every_n_iter = 50)
 
+''' Train network using the training data
+
+'''
     def train_network(self, features, labels):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x = {"x": features},
@@ -100,6 +112,9 @@ class Network:
         return self.cnn_classifier.train(input_fn = train_input_fn,
                                          hooks = [logging_hook])
 
+''' Predict using test data, return predictions in the form of probabilties 
+
+'''
     def pred_network(self, features, labels):
         pred_input_fn = tf.estimator.inputs.numpy_input_fn(
             x = {"x": features},
@@ -109,6 +124,9 @@ class Network:
         )
         return self.cnn_classifier.predict(input_fn=pred_input_fn)
 
+''' Evaluate network using testdata, does not return predictions
+
+'''
     def eval_network(self, features, labels):
         eval_input_fn = tf.estimator.inputs.numpy_input_fn(
             x = {"x": features},
